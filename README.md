@@ -4,57 +4,86 @@ Este repositório contém a implementação de um sistema de gerenciamento de pe
 
 ## Arquitetura
 
-O projeto segue os princípios da Clean Architecture, com uma clara separação de responsabilidades entre as camadas de domínio, aplicação e infraestrutura.
+O projeto segue os princípios da Clean Architecture, proposta por Robert C. Martin (Uncle Bob), que visa criar sistemas independentes de frameworks, testáveis e fáceis de manter. A arquitetura é dividida em camadas concêntricas, onde as camadas internas não dependem das externas:
+
+- **Entidades (Entity)**: Representam as regras de negócio centrais. No projeto, a entidade `Order` encapsula a lógica de cálculo do preço final.
+- **Casos de Uso (Use Case)**: Contêm a lógica de aplicação, orquestrando as entidades e interfaces. O `CreateOrderUseCase` gerencia a criação de pedidos.
+- **Infraestrutura (Infra)**: Implementa as interfaces definidas nas camadas internas. Inclui repositórios de banco de dados, handlers web, GraphQL, gRPC, etc.
+- **Adaptadores Externos**: Camada mais externa, como frameworks (Gin para web, gqlgen para GraphQL), bancos de dados (MySQL), mensageria (RabbitMQ).
+
+Essa separação permite que o código seja testável, com dependências injetadas via Google Wire, e facilita mudanças em tecnologias externas sem afetar o núcleo do negócio.
 
 ## Tecnologias Utilizadas
 
--   **Linguagem:** Go
--   **Banco de Dados:** MySQL
--   **Mensageria:** RabbitMQ
--   **APIs:**
-    -   REST
-    -   gRPC
-    -   GraphQL
--   **Injeção de Dependência:** Google Wire
+- **Linguagem:** Go
+- **Banco de Dados:** MySQL
+- **Mensageria:** RabbitMQ
+- **APIs:**
+  - REST (usando Gin)
+  - gRPC
+  - GraphQL (usando gqlgen)
+- **Injeção de Dependência:** Google Wire
+- **Containerização:** Docker e Docker Compose
 
 ## Como Executar
 
 Para executar o projeto, siga os passos abaixo:
 
-1.  **Clone o repositório:**
+1. **Clone o repositório:**
 
-    ```bash
-    git clone https://github.com/devfullcycle/go-expert-desafio-clean-arch.git
-    cd go-expert-desafio-clean-arch
-    ```
+   ```bash
+   git clone https://github.com/devfullcycle/go-expert-desafio-clean-arch.git
+   cd go-expert-desafio-clean-arch
+   ```
 
-2.  **Inicie os serviços:**
+2. **Inicie os serviços:**
 
-    O projeto utiliza Docker e Docker Compose para gerenciar os serviços de banco de dados e mensageria. Para iniciar todos os serviços, execute o comando abaixo:
+   O projeto utiliza Docker e Docker Compose para gerenciar os serviços de banco de dados e mensageria. Para iniciar todos os serviços, execute o comando abaixo:
 
-    ```bash
-    docker-compose up -d
-    ```
+   ```bash
+   docker-compose up -d
+   ```
 
-    Este comando irá iniciar os seguintes contêineres:
+   Este comando irá iniciar os seguintes contêineres:
 
-    -   `mysql`: Banco de dados MySQL
-    -   `rabbitmq`: Servidor de mensageria RabbitMQ
-    -   `app`: A aplicação Go
+   - `mysql`: Banco de dados MySQL
+   - `rabbitmq`: Servidor de mensageria RabbitMQ
+   - `app`: A aplicação Go
 
-3.  **Acesse as APIs:**
+3. **Verifique os logs:**
 
-    -   **API REST:** A API REST estará disponível em `http://localhost:8080`.
-        -   `POST /order`: Cria um novo pedido.
-        -   `GET /order`: Lista todos os pedidos.
-    -   **API gRPC:** O servidor gRPC estará disponível na porta `50051`.
-    -   **API GraphQL:** O playground do GraphQL estará disponível em `http://localhost:8082`.
+   Para ver os logs da aplicação:
 
-## Testando a Aplicação
+   ```bash
+   docker-compose logs app
+   ```
 
-Você pode utilizar o arquivo `api.http` para testar a API REST com a extensão REST Client do VS Code.
+## Como Usar
 
-### Exemplo de Requisição
+Após iniciar os serviços, a aplicação estará rodando com três APIs disponíveis:
+
+- **API REST:** Porta 8080
+- **API gRPC:** Porta 50051
+- **API GraphQL:** Porta 8082 (playground em http://localhost:8082)
+
+### API REST
+
+- `POST /order`: Cria um novo pedido.
+- `GET /order`: Lista todos os pedidos (não implementado no código atual, mas mencionado no README original).
+
+### API GraphQL
+
+O playground GraphQL permite testar mutações e queries diretamente no navegador.
+
+### API gRPC
+
+Use ferramentas como Evans para interagir com o servidor gRPC.
+
+## Exemplos de Chamadas
+
+### REST
+
+Use ferramentas como Postman, curl ou a extensão REST Client do VS Code.
 
 **Criar um novo pedido:**
 
@@ -63,16 +92,89 @@ POST http://localhost:8080/order
 Content-Type: application/json
 
 {
-  "id": "1",
+  "id": "123",
   "price": 100.0,
   "tax": 10.0
 }
 ```
 
-**Listar todos os pedidos:**
+**Resposta esperada:**
 
-```http
-GET http://localhost:8080/order
+```json
+{
+  "id": "123",
+  "price": 100.0,
+  "tax": 10.0,
+  "final_price": 110.0
+}
+```
+
+### GraphQL
+
+Acesse o playground em http://localhost:8082 e execute a seguinte mutação:
+
+```graphql
+mutation {
+  createOrder(input: {
+    id: "e",
+    Price: 2,
+    Tax: 1
+  }) {
+    id
+    Price
+    Tax
+    FinalPrice
+  }
+}
+```
+
+**Resposta esperada:**
+
+```json
+{
+  "data": {
+    "createOrder": {
+      "id": "e",
+      "Price": 2,
+      "Tax": 1,
+      "FinalPrice": 3
+    }
+  }
+}
+```
+
+### gRPC
+
+Para testar via gRPC, instale o Evans:
+
+```bash
+go install github.com/ktr0731/evans@latest
+```
+
+Em seguida, conecte ao servidor:
+
+```bash
+evans -r repl localhost:50051
+```
+
+No REPL do Evans, chame o serviço:
+
+```
+evans > call CreateOrder
+id (TYPE_STRING) => 123
+price (TYPE_FLOAT) => 100.0
+tax (TYPE_FLOAT) => 10.0
+```
+
+**Resposta esperada:**
+
+```
+{
+  "id": "123",
+  "price": 100,
+  "tax": 10,
+  "final_price": 110
+}
 ```
 
 ## Estrutura do Projeto

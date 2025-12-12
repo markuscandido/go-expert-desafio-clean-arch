@@ -48,6 +48,56 @@ To run the application locally, you need to have Go, MySQL, and RabbitMQ install
     go run cmd/ordersystem/main.go cmd/ordersystem/wire_gen.go
     ```
 
+## APIs
+
+The application exposes three different APIs: REST, gRPC, and GraphQL.
+
+### GraphQL
+
+The project uses [gqlgen](https://gqlgen.com/) to implement the GraphQL API. The GraphQL playground is available at [http://localhost:8080](http://localhost:8080) when running the application locally.
+
+To create a new order, you can use the following mutation:
+
+```graphql
+mutation {
+  createOrder(input: {
+    id: "e",
+    Price: 2,
+    Tax: 1
+  }) {
+    id
+    Price
+    Tax
+    FinalPrice
+  }
+}
+```
+
+### gRPC
+
+The project uses [gRPC](https://grpc.io/) to implement the gRPC API. The gRPC server is running on port `50051`.
+
+To interact with the gRPC server, you can use a tool like [Evans](https://github.com/ktr0731/evans). To install Evans, run the following command:
+
+```bash
+go install github.com/ktr0731/evans@latest
+```
+
+Once installed, you can connect to the server with the following command:
+
+```bash
+evans -r repl localhost:50051
+```
+
+In the Evans REPL, you can call the `CreateOrder` service:
+
+```
+evans > call CreateOrder
+id (TYPE_STRING) => 123
+price (TYPE_FLOAT) => 100.0
+tax (TYPE_FLOAT) => 10.0
+```
+
 ## Development Conventions
 
 ### Testing

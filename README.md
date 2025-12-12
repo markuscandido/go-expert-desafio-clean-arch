@@ -38,7 +38,7 @@ Para executar o projeto, siga os passos abaixo:
 
 2. **Inicie os serviços:**
 
-   O projeto utiliza Docker e Docker Compose para gerenciar os serviços de banco de dados e mensageria. Para iniciar todos os serviços, execute o comando abaixo:
+   O projeto utiliza Docker e Docker Compose para gerenciar os serviços de banco de dados, mensageria e aplicação. Para iniciar todos os serviços, execute o comando abaixo:
 
    ```bash
    docker-compose up -d
@@ -46,9 +46,9 @@ Para executar o projeto, siga os passos abaixo:
 
    Este comando irá iniciar os seguintes contêineres:
 
-   - `mysql`: Banco de dados MySQL
-   - `rabbitmq`: Servidor de mensageria RabbitMQ
-   - `app`: A aplicação Go
+   - `mysql`: Banco de dados MySQL com as migrations executadas automaticamente.
+   - `rabbitmq`: Servidor de mensageria RabbitMQ.
+   - `app`: A aplicação Go, construída com um Dockerfile multistage (usando Golang para build e Alpine para runtime).
 
 3. **Verifique os logs:**
 
@@ -58,18 +58,57 @@ Para executar o projeto, siga os passos abaixo:
    docker-compose logs app
    ```
 
+### Migrations
+
+As migrations do banco de dados são executadas automaticamente durante a inicialização do contêiner MySQL. O arquivo `sql/migrations/001_create_orders_table.sql` cria a tabela `orders` com os campos `id`, `price`, `tax` e `final_price`. Se precisar adicionar novas migrations, coloque os arquivos SQL na pasta `sql/migrations` e reinicie o contêiner MySQL.
+
+## Desenvolvimento Local
+
+Para rodar a aplicação localmente sem Docker:
+
+1. Certifique-se de ter Go instalado e os serviços MySQL e RabbitMQ rodando (pode usar Docker para eles).
+
+2. Crie um arquivo `.env` na raiz do projeto com as seguintes variáveis de ambiente:
+
+   ```
+   DB_DRIVER=mysql
+   DB_HOST=localhost
+   DB_PORT=3306
+   DB_USER=root
+   DB_PASSWORD=root
+   DB_NAME=orders
+   WEB_SERVER_PORT=8000
+   GRPC_SERVER_PORT=50051
+   GRAPHQL_SERVER_PORT=8080
+   RABBITMQ_HOST=localhost
+   RABBITMQ_PORT=5672
+   RABBITMQ_USER=guest
+   RABBITMQ_PASS=guest
+   ```
+   Ajuste os valores conforme sua configuração local.
+
+3. Execute as migrations manualmente no MySQL.
+
+4. Rode o comando:
+
+   ```bash
+   cd cmd/ordersystem
+   go run main.go wire_gen.go
+   ```
+
+Isso iniciará os servidores REST (porta 8000), gRPC (porta 50051) e GraphQL (porta 8080).
+
 ## Como Usar
 
 Após iniciar os serviços, a aplicação estará rodando com três APIs disponíveis:
 
-- **API REST:** Porta 8080
+- **API REST:** Porta 8000
 - **API gRPC:** Porta 50051
-- **API GraphQL:** Porta 8082 (playground em http://localhost:8082)
+- **API GraphQL:** Porta 8080 (playground em http://localhost:8080)
 
 ### API REST
 
 - `POST /order`: Cria um novo pedido.
-- `GET /order`: Lista todos os pedidos (não implementado no código atual, mas mencionado no README original).
 
 ### API GraphQL
 
@@ -88,7 +127,7 @@ Use ferramentas como Postman, curl ou a extensão REST Client do VS Code.
 **Criar um novo pedido:**
 
 ```http
-POST http://localhost:8080/order
+POST http://localhost:8000/order
 Content-Type: application/json
 
 {
@@ -111,7 +150,7 @@ Content-Type: application/json
 
 ### GraphQL
 
-Acesse o playground em http://localhost:8082 e execute a seguinte mutação:
+Acesse o playground em http://localhost:8080 e execute a seguinte mutação:
 
 ```graphql
 mutation {
@@ -170,10 +209,10 @@ tax (TYPE_FLOAT) => 10.0
 
 ```
 {
+  "finalPrice": 105.99,
   "id": "123",
-  "price": 100,
-  "tax": 10,
-  "final_price": 110
+  "price": 100.99,
+  "tax": 5
 }
 ```
 
@@ -181,8 +220,10 @@ tax (TYPE_FLOAT) => 10.0
 
 ```
 .
+├── Dockerfile
+├── GEMINI.md
+├── README.md
 ├── api
-│   ├── api.http
 │   └── create_order.http
 ├── cmd
 │   └── ordersystem
@@ -209,8 +250,7 @@ tax (TYPE_FLOAT) => 10.0
 │   │   │   ├── order_repository.go
 │   │   │   └── order_repository_test.go
 │   │   ├── graph
-│   │   │   ├── generated
-│   │   │   │   └── generated.go
+│   │   │   ├── generated.go
 │   │   │   ├── model
 │   │   │   │   └── models_gen.go
 │   │   │   ├── resolver.go
@@ -230,16 +270,14 @@ tax (TYPE_FLOAT) => 10.0
 │   │           ├── starter.go
 │   │           └── webserver.go
 │   └── usecase
-│       ├── create_order.go
-│       └── list_orders.go
+│       └── create_order.go
 ├── pkg
 │   └── events
 │       ├── event_dispatcher.go
 │       ├── event_dispatcher_test.go
 │       └── interface.go
-├── README.md
 ├── sql
 │   └── migrations
-│       └── create_orders_table.sql
+│       └── 001_create_orders_table.sql
 └── tools.go
 ```

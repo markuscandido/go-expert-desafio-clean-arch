@@ -12,6 +12,10 @@ type conf struct {
 	WebServerPort     string `mapstructure:"WEB_SERVER_PORT"`
 	GRPCServerPort    string `mapstructure:"GRPC_SERVER_PORT"`
 	GraphQLServerPort string `mapstructure:"GRAPHQL_SERVER_PORT"`
+	RabbitMQHost      string `mapstructure:"RABBITMQ_HOST"`
+	RabbitMQPort      string `mapstructure:"RABBITMQ_PORT"`
+	RabbitMQUser      string `mapstructure:"RABBITMQ_USER"`
+	RabbitMQPass      string `mapstructure:"RABBITMQ_PASS"`
 }
 
 func LoadConfig(path string) (*conf, error) {
@@ -23,7 +27,9 @@ func LoadConfig(path string) (*conf, error) {
 	viper.AutomaticEnv()
 	err := viper.ReadInConfig()
 	if err != nil {
-		panic(err)
+		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+			panic(err)
+		}
 	}
 	err = viper.Unmarshal(&cfg)
 	if err != nil {

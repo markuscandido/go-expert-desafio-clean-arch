@@ -3,7 +3,7 @@ POST http://localhost:8000/order
 Content-Type: application/json
 
 {
-    "id": "order-001",
+    "id": "order-005",
     "price": 100.0,
     "tax": 10.0
 }

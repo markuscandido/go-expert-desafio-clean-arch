@@ -95,20 +95,36 @@ go install github.com/ktr0731/evans@latest
 
 Conecte ao servidor:
 ```bash
-evans -r repl localhost:50051
+evans -r repl -p 50051
+```
+
+> **Importante:** Antes de chamar os métodos, você precisa selecionar o package e o serviço.
+
+#### Configuração inicial no Evans REPL
+```
+127.0.0.1:50051> package pb
+127.0.0.1:50051> service OrderService
+```
+
+#### Listar Orders
+```
+pb.OrderService@127.0.0.1:50051> call ListOrders
+{}
 ```
 
 #### Criar Order
 ```
-call CreateOrder
+pb.OrderService@127.0.0.1:50051> call CreateOrder
 id (TYPE_STRING) => order-001
 price (TYPE_FLOAT) => 100.0
 tax (TYPE_FLOAT) => 10.0
 ```
 
-#### Listar Orders
+#### Comandos úteis do Evans
 ```
-call ListOrders
+show package    # Lista pacotes disponíveis
+show service    # Lista serviços do pacote selecionado
+show message    # Lista mensagens/tipos disponíveis
 ```
 
 ---

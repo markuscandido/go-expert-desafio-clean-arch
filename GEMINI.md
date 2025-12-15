@@ -1,106 +1,67 @@
 # Project Overview
 
-This project is a Go application that manages orders, following the principles of Clean Architecture. It exposes three different APIs: REST, gRPC, and GraphQL. The application is containerized using Docker and uses MySQL for the database and RabbitMQ for messaging.
+This project is a Go-based order management system that follows Clean Architecture principles. It exposes three different APIs for interacting with the system: REST, gRPC, and GraphQL. The system uses MySQL as its database, RabbitMQ for event-driven communication, and Google Wire for dependency injection.
 
-## Building and Running
+The project is well-structured, with a clear separation of concerns:
+- `internal/entity`: Contains the core domain entities, such as the `Order` entity.
+- `internal/usecase`: Contains the application's business logic, such as creating and listing orders.
+- `internal/infra`: Contains the infrastructure-level implementations, such as database repositories, web handlers, gRPC services, and GraphQL resolvers.
+- `cmd/ordersystem`: Contains the main application entry point, where all the components are wired together and the servers are started.
 
-### With Docker
+# Building and Running
 
-To build and run the application using Docker, run the following command:
+## Using Docker (Recommended)
+
+The easiest way to run the project is by using Docker Compose:
 
 ```bash
 docker-compose up -d
 ```
 
-This will start the application, the MySQL database, and the RabbitMQ message broker.
+This will start the following services:
+- `mysql`: The MySQL database.
+- `rabbitmq`: The RabbitMQ message broker.
+- `app`: The Go application.
 
-### Locally
+You can then access the different APIs on the following ports:
+- **REST API**: `http://localhost:8000`
+- **gRPC API**: `localhost:50051`
+- **GraphQL API**: `http://localhost:8080`
 
-To run the application locally, you need to have Go, MySQL, and RabbitMQ installed.
+## Locally
 
-1.  Install dependencies:
+To run the project locally, you need to have Go, Docker, and Docker Compose installed.
 
-    ```bash
-    go mod tidy
-    ```
+1. **Start the database and message broker:**
+   ```bash
+   docker-compose up -d mysql rabbitmq
+   ```
 
-2.  Create a `.env` file in the root of the project with the following variables:
+2. **Create a `.env` file** with the following content:
+   ```env
+   DB_DRIVER=mysql
+   DB_HOST=localhost
+   DB_PORT=3306
+   DB_USER=root
+   DB_PASSWORD=root
+   DB_NAME=orders
+   WEB_SERVER_PORT=:8000
+   GRPC_SERVER_PORT=50051
+   GRAPHQL_SERVER_PORT=8080
+   RABBITMQ_HOST=localhost
+   RABBITMQ_PORT=5672
+   RABBITMQ_USER=guest
+   RABBITMQ_PASS=guest
+   ```
 
-    ```
-    DB_DRIVER=mysql
-    DB_HOST=localhost
-    DB_PORT=3306
-    DB_USER=root
-    DB_PASSWORD=root
-    DB_NAME=orders
-    WEB_SERVER_PORT=8000
-    GRPC_SERVER_PORT=50051
-    GRAPHQL_SERVER_PORT=8080
-    RABBITMQ_HOST=localhost
-    RABBITMQ_PORT=5672
-    RABBITMQ_USER=guest
-    RABBITMQ_PASS=guest
-    ```
+3. **Run the application:**
+   ```bash
+   go run cmd/ordersystem/main.go
+   ```
 
-3.  Run the application:
+# Development Conventions
 
-    ```bash
-    go run cmd/ordersystem/main.go cmd/ordersystem/wire_gen.go
-    ```
-
-## APIs
-
-The application exposes three different APIs: REST, gRPC, and GraphQL.
-
-### GraphQL
-
-The project uses [gqlgen](https://gqlgen.com/) to implement the GraphQL API. The GraphQL playground is available at [http://localhost:8080](http://localhost:8080) when running the application locally.
-
-To create a new order, you can use the following mutation:
-
-```graphql
-mutation {
-  createOrder(input: {
-    id: "e",
-    Price: 2,
-    Tax: 1
-  }) {
-    id
-    Price
-    Tax
-    FinalPrice
-  }
-}
-```
-
-### gRPC
-
-The project uses [gRPC](https://grpc.io/) to implement the gRPC API. The gRPC server is running on port `50051`.
-
-To interact with the gRPC server, you can use a tool like [Evans](https://github.com/ktr0731/evans). To install Evans, run the following command:
-
-```bash
-go install github.com/ktr0731/evans@latest
-```
-
-Once installed, you can connect to the server with the following command:
-
-```bash
-evans -r repl localhost:50051
-```
-
-In the Evans REPL, you can call the `CreateOrder` service:
-
-```
-evans > call CreateOrder
-id (TYPE_STRING) => 123
-price (TYPE_FLOAT) => 100.0
-tax (TYPE_FLOAT) => 10.0
-```
-
-## Development Conventions
-
-### Testing
+## Testing
 
 To run the tests, use the following command:
 
@@ -108,14 +69,21 @@ To run the tests, use the following command:
 go test ./...
 ```
 
-### Dependency Injection
+## Code Generation
 
-The project uses Google Wire for dependency injection. To generate the wire code, run the following command:
+The project uses code generation for gRPC, GraphQL, and dependency injection.
 
-```bash
-go generate ./...
-```
+- **gRPC:** To regenerate the gRPC code, run the following command:
+  ```bash
+  protoc --go_out=. --go-grpc_out=. internal/infra/grpc/protofiles/order.proto
+  ```
 
-### Database Migrations
+- **GraphQL:** To regenerate the GraphQL code, run the following command:
+  ```bash
+  go run github.com/99designs/gqlgen generate
+  ```
 
-Database migrations are located in the `sql/migrations` directory. They are automatically applied when the application starts if you are using Docker. If you are running the application locally, you need to run the migrations manually.
+- **Dependency Injection (Wire):** To regenerate the dependency injection code, run the following command:
+  ```bash
+  go generate ./...
+  ```

@@ -152,7 +152,7 @@ DB_PORT=3306
 DB_USER=root
 DB_PASSWORD=root
 DB_NAME=orders
-WEB_SERVER_PORT=8000
+WEB_SERVER_PORT=:8000
 GRPC_SERVER_PORT=50051
 GRAPHQL_SERVER_PORT=8080
 RABBITMQ_HOST=localhost
@@ -175,16 +175,37 @@ go run cmd/ordersystem/main.go cmd/ordersystem/wire_gen.go
 │   ├── main.go
 │   ├── wire.go               # Configuração de DI
 │   └── wire_gen.go           # Código gerado pelo Wire
+├── configs/
+│   └── config.go             # Configurações da aplicação
+├── docs/                     # Documentação
 ├── internal/
 │   ├── entity/               # Entidades de domínio
+│   │   ├── interface.go
+│   │   ├── order.go
+│   │   └── order_test.go
+│   ├── event/                # Eventos de domínio
+│   │   ├── handler/
+│   │   └── order_created.go
 │   ├── usecase/              # Casos de uso
 │   │   ├── create_order.go
 │   │   └── list_orders.go
 │   └── infra/
 │       ├── database/         # Repositórios
 │       ├── graph/            # GraphQL
+│       │   ├── model/
+│       │   ├── generated.go
+│       │   ├── resolver.go
+│       │   ├── schema.graphqls
+│       │   └── schema.resolvers.go
 │       ├── grpc/             # gRPC
+│       │   ├── pb/           # Código gerado
+│       │   ├── protofiles/   # Arquivos .proto
+│       │   └── service/
 │       └── web/              # REST API
+│           ├── webserver/
+│           └── order_handler.go
+├── pkg/
+│   └── events/               # Event Dispatcher
 ├── api/
 │   └── api.http              # Requests HTTP para testes
 ├── sql/migrations/           # Scripts de migração

@@ -1,164 +1,69 @@
-# Desafio Clean Architecture
+# Desafio Clean Architecture - Go Expert
 
-Este repositório contém a implementação de um sistema de gerenciamento de pedidos como parte do desafio do curso Full Cycle Go Expert.
+Sistema de gerenciamento de pedidos seguindo os princípios da Clean Architecture, expondo três APIs: REST, gRPC e GraphQL.
 
-## Arquitetura
+## 🚀 Passo a Passo para Execução
 
-O projeto segue os princípios da Clean Architecture, proposta por Robert C. Martin (Uncle Bob), que visa criar sistemas independentes de frameworks, testáveis e fáceis de manter. A arquitetura é dividida em camadas concêntricas, onde as camadas internas não dependem das externas:
+### 1. Clone o repositório
 
-- **Entidades (Entity)**: Representam as regras de negócio centrais. No projeto, a entidade `Order` encapsula a lógica de cálculo do preço final.
-- **Casos de Uso (Use Case)**: Contêm a lógica de aplicação, orquestrando as entidades e interfaces. O `CreateOrderUseCase` gerencia a criação de pedidos.
-- **Infraestrutura (Infra)**: Implementa as interfaces definidas nas camadas internas. Inclui repositórios de banco de dados, handlers web, GraphQL, gRPC, etc.
-- **Adaptadores Externos**: Camada mais externa, como frameworks (Gin para web, gqlgen para GraphQL), bancos de dados (MySQL), mensageria (RabbitMQ).
-
-Essa separação permite que o código seja testável, com dependências injetadas via Google Wire, e facilita mudanças em tecnologias externas sem afetar o núcleo do negócio.
-
-## Tecnologias Utilizadas
-
-- **Linguagem:** Go
-- **Banco de Dados:** MySQL
-- **Mensageria:** RabbitMQ
-- **APIs:**
-  - REST (usando Gin)
-  - gRPC
-  - GraphQL (usando gqlgen)
-- **Injeção de Dependência:** Google Wire
-- **Containerização:** Docker e Docker Compose
-
-## Como Executar
-
-Para executar o projeto, siga os passos abaixo:
-
-1. **Clone o repositório:**
-
-   ```bash
-   git clone https://github.com/devfullcycle/go-expert-desafio-clean-arch.git
-   cd go-expert-desafio-clean-arch
-   ```
-
-2. **Inicie os serviços:**
-
-   O projeto utiliza Docker e Docker Compose para gerenciar os serviços de banco de dados, mensageria e aplicação. Para iniciar todos os serviços, execute o comando abaixo:
-
-   ```bash
-   docker-compose up -d
-   ```
-
-   Este comando irá iniciar os seguintes contêineres:
-
-   - `mysql`: Banco de dados MySQL com as migrations executadas automaticamente.
-   - `rabbitmq`: Servidor de mensageria RabbitMQ.
-   - `app`: A aplicação Go, construída com um Dockerfile multistage (usando Golang para build e Alpine para runtime).
-
-3. **Verifique os logs:**
-
-   Para ver os logs da aplicação:
-
-   ```bash
-   docker-compose logs app
-   ```
-
-### Migrations
-
-As migrations do banco de dados são executadas automaticamente durante a inicialização do contêiner MySQL. O arquivo `sql/migrations/001_create_orders_table.sql` cria a tabela `orders` com os campos `id`, `price`, `tax` e `final_price`. Se precisar adicionar novas migrations, coloque os arquivos SQL na pasta `sql/migrations` e reinicie o contêiner MySQL.
-
-## Desenvolvimento Local
-
-Para rodar a aplicação localmente sem Docker:
-
-1. Certifique-se de ter Go instalado e os serviços MySQL e RabbitMQ rodando (pode usar Docker para eles).
-
-2. Crie um arquivo `.env` na raiz do projeto com as seguintes variáveis de ambiente:
-
-   ```
-   DB_DRIVER=mysql
-   DB_HOST=localhost
-   DB_PORT=3306
-   DB_USER=root
-   DB_PASSWORD=root
-   DB_NAME=orders
-   WEB_SERVER_PORT=8000
-   GRPC_SERVER_PORT=50051
-   GRAPHQL_SERVER_PORT=8080
-   RABBITMQ_HOST=localhost
-   RABBITMQ_PORT=5672
-   RABBITMQ_USER=guest
-   RABBITMQ_PASS=guest
-   ```
-   Ajuste os valores conforme sua configuração local.
-
-3. Execute as migrations manualmente no MySQL.
-
-4. Rode o comando:
-
-   ```bash
-   cd cmd/ordersystem
-   go run main.go wire_gen.go
-   ```
-
-Isso iniciará os servidores REST (porta 8000), gRPC (porta 50051) e GraphQL (porta 8080).
-
-## Como Usar
-
-Após iniciar os serviços, a aplicação estará rodando com três APIs disponíveis:
-
-- **API REST:** Porta 8000
-- **API gRPC:** Porta 50051
-- **API GraphQL:** Porta 8080 (playground em http://localhost:8080)
-
-### API REST
-
-- `POST /order`: Cria um novo pedido.
-
-### API GraphQL
-
-O playground GraphQL permite testar mutações e queries diretamente no navegador.
-
-### API gRPC
-
-Use ferramentas como Evans para interagir com o servidor gRPC.
-
-## Exemplos de Chamadas
-
-### REST
-
-Use ferramentas como Postman, curl ou a extensão REST Client do VS Code.
-
-**Criar um novo pedido:**
-
-```http
-POST http://localhost:8000/order
-Content-Type: application/json
-
-{
-  "id": "123",
-  "price": 100.0,
-  "tax": 10.0
-}
+```bash
+git clone https://github.com/markuscandido/go-expert-desafio-clean-arch.git
+cd go-expert-desafio-clean-arch
 ```
 
-**Resposta esperada:**
+### 2. Inicie os serviços com Docker
 
-```json
-{
-  "id": "123",
-  "price": 100.0,
-  "tax": 10.0,
-  "final_price": 110.0
-}
+```bash
+docker-compose up -d
 ```
 
-### GraphQL
+Este comando inicia:
+- **MySQL**: Banco de dados com migrations automáticas
+- **RabbitMQ**: Servidor de mensageria
+- **App**: Aplicação Go
 
-Acesse o playground em http://localhost:8080 e execute a seguinte mutação:
+### 3. Verifique se os serviços estão rodando
 
+```bash
+docker-compose logs app
+```
+
+### 4. Acesse as APIs
+
+| Serviço | Porta | Endpoint |
+|---------|-------|----------|
+| REST | 8000 | `http://localhost:8000/order` |
+| gRPC | 50051 | `localhost:50051` |
+| GraphQL | 8080 | `http://localhost:8080` (Playground) |
+
+---
+
+## 📡 APIs Disponíveis
+
+### REST API (Porta 8000)
+
+#### Criar Order
+```bash
+curl -X POST http://localhost:8000/order \
+  -H "Content-Type: application/json" \
+  -d '{"id": "order-001", "price": 100.0, "tax": 10.0}'
+```
+
+#### Listar Orders
+```bash
+curl http://localhost:8000/order
+```
+
+---
+
+### GraphQL (Porta 8080)
+
+Acesse o playground em: http://localhost:8080
+
+#### Criar Order
 ```graphql
 mutation {
-  createOrder(input: {
-    id: "e",
-    Price: 2,
-    Tax: 1
-  }) {
+  createOrder(input: { id: "order-001", Price: 100.0, Tax: 10.0 }) {
     id
     Price
     Tax
@@ -167,117 +72,160 @@ mutation {
 }
 ```
 
-**Resposta esperada:**
-
-```json
-{
-  "data": {
-    "createOrder": {
-      "id": "e",
-      "Price": 2,
-      "Tax": 1,
-      "FinalPrice": 3
-    }
+#### Listar Orders
+```graphql
+query {
+  listOrders {
+    id
+    Price
+    Tax
+    FinalPrice
   }
 }
 ```
 
-### gRPC
+---
 
-Para testar via gRPC, instale o Evans:
+### gRPC (Porta 50051)
 
+Instale o Evans para testar:
 ```bash
 go install github.com/ktr0731/evans@latest
 ```
 
-Em seguida, conecte ao servidor:
-
+Conecte ao servidor:
 ```bash
 evans -r repl localhost:50051
 ```
 
-No REPL do Evans, chame o serviço:
-
+#### Criar Order
 ```
-evans > call CreateOrder
-id (TYPE_STRING) => 123
+call CreateOrder
+id (TYPE_STRING) => order-001
 price (TYPE_FLOAT) => 100.0
 tax (TYPE_FLOAT) => 10.0
 ```
 
-**Resposta esperada:**
-
+#### Listar Orders
 ```
-{
-  "finalPrice": 105.99,
-  "id": "123",
-  "price": 100.99,
-  "tax": 5
-}
+call ListOrders
 ```
 
-## Estrutura do Projeto
+---
+
+## 🛠️ Desenvolvimento Local
+
+### Pré-requisitos
+
+- Go 1.24+
+- Docker e Docker Compose
+- protoc (Protocol Buffers compiler)
+
+### Executar sem Docker
+
+1. Inicie MySQL e RabbitMQ via Docker:
+```bash
+docker-compose up -d mysql rabbitmq
+```
+
+2. Crie o arquivo `.env`:
+```env
+DB_DRIVER=mysql
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=root
+DB_NAME=orders
+WEB_SERVER_PORT=8000
+GRPC_SERVER_PORT=50051
+GRAPHQL_SERVER_PORT=8080
+RABBITMQ_HOST=localhost
+RABBITMQ_PORT=5672
+RABBITMQ_USER=guest
+RABBITMQ_PASS=guest
+```
+
+3. Execute a aplicação:
+```bash
+go run cmd/ordersystem/main.go cmd/ordersystem/wire_gen.go
+```
+
+---
+
+## 📁 Estrutura do Projeto
 
 ```
-.
-├── Dockerfile
-├── GEMINI.md
-├── README.md
-├── api
-│   └── create_order.http
-├── cmd
-│   └── ordersystem
-│       ├── main.go
-│       ├── wire.go
-│       └── wire_gen.go
-├── configs
-│   └── config.go
-├── docker-compose.yaml
-├── go.mod
-├── go.sum
-├── gqlgen.yml
-├── internal
-│   ├── entity
-│   │   ├── interface.go
-│   │   ├── order.go
-│   │   └── order_test.go
-│   ├── event
-│   │   ├── handler
-│   │   │   └── order_created_handler.go
-│   │   └── order_created.go
-│   ├── infra
-│   │   ├── database
-│   │   │   ├── order_repository.go
-│   │   │   └── order_repository_test.go
-│   │   ├── graph
-│   │   │   ├── generated.go
-│   │   │   ├── model
-│   │   │   │   └── models_gen.go
-│   │   │   ├── resolver.go
-│   │   │   ├── schema.graphqls
-│   │   │   └── schema.resolvers.go
-│   │   ├── grpc
-│   │   │   ├── pb
-│   │   │   │   ├── order.pb.go
-│   │   │   │   └── order_grpc.pb.go
-│   │   │   ├── protofiles
-│   │   │   │   └── order.proto
-│   │   │   └── service
-│   │   │       └── order_service.go
-│   │   └── web
-│   │       ├── order_handler.go
-│   │       └── webserver
-│   │           ├── starter.go
-│   │           └── webserver.go
-│   └── usecase
-│       └── create_order.go
-├── pkg
-│   └── events
-│       ├── event_dispatcher.go
-│       ├── event_dispatcher_test.go
-│       └── interface.go
-├── sql
-│   └── migrations
-│       └── 001_create_orders_table.sql
-└── tools.go
+├── cmd/ordersystem/          # Ponto de entrada da aplicação
+│   ├── main.go
+│   ├── wire.go               # Configuração de DI
+│   └── wire_gen.go           # Código gerado pelo Wire
+├── internal/
+│   ├── entity/               # Entidades de domínio
+│   ├── usecase/              # Casos de uso
+│   │   ├── create_order.go
+│   │   └── list_orders.go
+│   └── infra/
+│       ├── database/         # Repositórios
+│       ├── graph/            # GraphQL
+│       ├── grpc/             # gRPC
+│       └── web/              # REST API
+├── api/
+│   └── api.http              # Requests HTTP para testes
+├── sql/migrations/           # Scripts de migração
+└── docker-compose.yaml
 ```
+
+---
+
+## 🔧 Comandos de Desenvolvimento
+
+### Regenerar código gRPC
+```bash
+protoc --go_out=. --go-grpc_out=. internal/infra/grpc/protofiles/order.proto
+```
+
+### Regenerar código GraphQL
+```bash
+go run github.com/99designs/gqlgen generate
+```
+
+### Regenerar Wire (DI)
+```bash
+go generate ./...
+```
+
+### Executar testes
+```bash
+go test ./...
+```
+
+---
+
+## 📋 Funcionalidades
+
+- ✅ **CreateOrder**: Criar pedido via REST, gRPC e GraphQL
+- ✅ **ListOrders**: Listar pedidos via REST, gRPC e GraphQL
+- ✅ **Event Dispatcher**: Eventos publicados no RabbitMQ ao criar pedido
+
+---
+
+## 🏗️ Arquitetura
+
+O projeto segue **Clean Architecture**:
+
+- **Entity**: Regras de negócio (`Order`)
+- **UseCase**: Lógica de aplicação (`CreateOrderUseCase`, `ListOrdersUseCase`)
+- **Infra**: Implementações externas (DB, HTTP, gRPC, GraphQL)
+- **Dependency Injection**: Google Wire
+
+---
+
+## 📦 Tecnologias
+
+- **Go** 1.24+
+- **MySQL** 5.7
+- **RabbitMQ** 3
+- **gRPC** com Protocol Buffers
+- **GraphQL** com gqlgen
+- **Docker** e Docker Compose
+- **Google Wire** para DI
